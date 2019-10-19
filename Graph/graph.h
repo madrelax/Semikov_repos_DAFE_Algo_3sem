@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <queue>
+#include <iostream>
 
 enum Color {
     WHITE,
@@ -45,6 +46,37 @@ private:
     std::vector<std::vector<size_t>> vertices;
 };
 
+//Ориентированный граф на основе матрицы инцендентности, реализующий интерфейс IGraph
+class MatrixGraph : public IGraph {
+public:
+    //Конструктор принимает кол-во вершин в графе
+    MatrixGraph(size_t verticesCount) : vertices(verticesCount, std::vector<bool>(verticesCount, false)) { //задаём матрицу verticesCount x verticesCount заполненую false
+    }
+
+    void AddEdge(size_t from, size_t to) override {
+        vertices.at(from).at(to) = true;
+        //Если бы граф был неориентированным то также было бы vertices.at(to).at(from) = true;
+    }
+
+    size_t VerticesCount() const override {
+        return vertices.size();
+    }
+
+    //Внимание! эта функция работает за линейное от кол-ва вершин время
+    std::vector<size_t> GetVertices(size_t vertex) const override {
+        std::vector<size_t> result;
+        for(size_t i = 0, n = vertices.size(); i < n; ++i) {
+            if(vertices.at(vertex)[i]) {    //если в нашей матрице на позиции (vertex, i) стоит true то из vertex по ребру можно попасть в i
+                result.push_back(i);        //добавляем i в результат. Амартизированное время работы будет константным
+            }
+        }
+        return result;
+    }
+private:
+    std::vector<std::vector<bool>> vertices;   //Матрицу будем хранить в виде вектора векторов, кол-во столбцов равео кол-ву строк  равно  кол-ву вершин
+};
+
+// Функция принимает указатель на интерфкйс графа, вершину, и ссылку на вектор цветов
 bool dfs(const IGraph* const graph, size_t vertex, std::vector<Color>& colors) {
     colors[vertex] = GRAY;  //когда зашли в вершину закрасили её в серый цвет
     for(auto nextVertex : graph->GetVertices(vertex)) { //Перебираем все вершины в которые можно попасть по ребру из данной
@@ -71,6 +103,7 @@ bool hasCycle(const IGraph* const graph) {
     }
     return false;
 }
+
 
 int bfs(const IGraph* const graph, size_t vertex) {
     std::queue<size_t> q;
@@ -132,5 +165,77 @@ int minCycle(const IGraph* const graph) {
         minCycleConteiningVertex(graph, i, minCycle);
 
     return minCycle;
+}
+
+size_t kShortestPaths(const IGraph* const graph, size_t start, size_t finish){
+    std::vector<size_t> shortest_paths(graph->VerticesCount());
+    std::vector<bool> next_ring(graph->VerticesCount());
+    std::queue<size_t> q;
+    q.push (start);
+    shortest_paths[start] = 1;
+    while (!q.empty()) {
+        size_t curVertex = q.front();
+        q.pop();
+        if(next_ring[curVertex] == true){
+            if(shortest_paths[finish] != 0){
+                return shortest_paths[finish];
+            }
+            next_ring.assign(next_ring.size(), false);
+        }
+        for (size_t nextVertex : graph->GetVertices(curVertex)) {
+
+            if (shortest_paths[nextVertex] == 0) {
+                shortest_paths[nextVertex] = shortest_paths[curVertex];
+                q.push(nextVertex);
+                next_ring[nextVertex] = true;
+            }
+            else if(next_ring[nextVertex]) {
+                shortest_paths[nextVertex] += shortest_paths[curVertex];
+            }
+        }
+    }
+}
+
+enum Type {
+    NONE,
+    FIRST,
+    SECOND
+};
+
+Type t_rev(Type a){
+    if(a == FIRST) return SECOND;
+    if(a == SECOND) return FIRST;
+}
+
+std::string isBipartite(const IGraph* const graph) {
+    std::queue<size_t> q;
+    std::vector<bool> used (graph->VerticesCount(), false);
+    std::vector<Type> Part(graph->VerticesCount(), NONE);
+    size_t vertex = 0;
+    q.push(vertex);
+    used[vertex] = true;
+    Part[vertex] = FIRST;
+    while (!q.empty()) {
+        size_t curVertex = q.front();
+        q.pop();
+        for (size_t nextVertex : graph->GetVertices(curVertex)) {
+            if (!used[nextVertex]) {
+                if(Part[nextVertex] == NONE)
+                    Part[nextVertex] = t_rev(Part[curVertex]);
+
+                else if(Part[nextVertex] != Part[curVertex])
+                    return "NO";
+
+                used[nextVertex] = true;
+                q.push(nextVertex);
+            }
+            else {
+                if(Part[nextVertex] == Part[curVertex])
+                    return "NO";
+
+            }
+        }
+    }
+    return "YES";
 }
 #endif //DSF_GRAPH_H
