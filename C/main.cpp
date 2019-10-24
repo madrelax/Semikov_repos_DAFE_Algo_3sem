@@ -3,6 +3,12 @@
 #include <queue>
 #include <iostream>
 
+enum Color {
+    WHITE,
+    GRAY,
+    BLACK
+};
+
 class IGraph {  //Интерфейс графа
 public:
     virtual ~IGraph() {}    //Виртуальный деструктор чтобы при удалении по указателю не было утечки памяти
@@ -90,9 +96,12 @@ size_t kShortestPaths(const IGraph* const graph, size_t start, size_t finish){
             else if(next_ring[nextVertex]) {
                 shortest_paths[nextVertex] += shortest_paths[curVertex];
             }
+
         }
     }
+
 }
+
 
 int main() {
     size_t V, N;
@@ -108,3 +117,4 @@ int main() {
     std::cin >> A >> B;
     std::cout << kShortestPaths(&graph, A, B);
 }
+
