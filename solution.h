@@ -5,12 +5,14 @@ void bfs(const int &n, vector<int> &ans, unordered_map<int, vector<int>> &red,  
         int path = 1;
         vector<vector<pair<bool, bool>>> visit(n, vector<pair<bool, bool>>(n, make_pair(false, false)));
         
-        queue<int> q; q.push(0);
+        queue<int> q; 
+	q.push(0);
         while(!q.empty()){
             queue<int> tmp;
             
             while(!q.empty()){
-                int f = q.front(); q.pop();
+                int f = q.front();
+		q.pop();
                 
 				
                 for(auto v: (!prev ? red[f] : blue[f]))
