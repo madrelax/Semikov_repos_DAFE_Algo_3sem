@@ -1,3 +1,4 @@
+// Solution for task https://leetcode.com/problems/shortest-path-with-alternating-colors/
 class Solution {
 public:
 void bfs(const int &n, vector<int> &ans, unordered_map<int, vector<int>> &red,  unordered_map<int, vector<int>> &blue, int prev){
